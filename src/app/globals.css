@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F8F9FB;
+  --surface: #F2F4F8;
+  --card: #FFFFFF;
+  --primary-text: #2C2E33;
+  --secondary-text: #64748B;
+  --disabled-text: #94A3B8;
+  --accent: #D3D3FF;
+  --accent-soft: #F4F4FF;
+  --accent-foreground: #2D3135;
+  --border: rgba(0, 0, 0, 0.04);
+  --radius: 12px;
+  --sidebar-width: 220px;
+}
+
+* {
+  border-color: var(--border);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--primary-text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--primary-text);
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 22px;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 16px;
+}
+
+h4 {
+  font-size: 14px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  height: 38px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.shadow-4xl,
+.shadow-3xl {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+input,
+textarea {
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #fff;
+  padding: 0 12px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(175, 203, 255, 0.2);
+}
+
+textarea {
+  height: auto;
+  padding: 12px;
+}
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
