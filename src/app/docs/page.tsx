@@ -389,10 +389,6 @@ function DocContent({ id }: { id: string }) {
                             <h5 className="font-semibold text-[var(--primary-text)] mb-3 text-[14px]">How do Mood Pixels work?</h5>
                             <p className="opacity-70 leading-relaxed">Simply tap a pixel on the Analytics page or complete your Daily Pulse check-in. The color represents your emotional intensity for that day.</p>
                         </div>
-                        <div className="card bg-white border border-[var(--border)] rounded-xl p-6 shadow-xs">
-                            <h5 className="font-semibold text-[var(--primary-text)] mb-3 text-[14px]">Can I export my data?</h5>
-                            <p className="opacity-70 leading-relaxed">Yes. Navigate to Analytics and use the "Export Journal" button to download a copy of your sanctuary logs in plain text.</p>
-                        </div>
                     </div>
                 </div>
             );

@@ -23,11 +23,16 @@ export default function DailyCheckIn({ name, onClose, onSave }: DailyCheckInProp
     ];
 
     return (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-black/5 backdrop-blur-sm">
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-[#D3D3FF]/40 backdrop-blur-md"
+            aria-modal="true"
+            role="dialog"
+            onClick={(e) => e.stopPropagation()}
+        >
             <motion.div
-                initial={{ scale: 0.98, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8 relative overflow-hidden border border-[var(--border)]"
+                initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                className="w-full max-w-[360px] max-h-[85vh] overflow-y-auto bg-white/95 rounded-[16px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.12)] p-6 relative border border-white/60"
             >
                 <div className="absolute top-4 right-4">
                     <button onClick={onClose} className="p-1 hover:bg-[var(--surface)] rounded-md transition-all">
@@ -36,9 +41,12 @@ export default function DailyCheckIn({ name, onClose, onSave }: DailyCheckInProp
                 </div>
 
                 <div className="space-y-6">
-                    <div className="text-center">
+                    <div className="text-center mb-2">
+                        <div className="w-12 h-12 bg-[#D3D3FF]/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Sparkles className="w-5 h-5 text-[#8A8AEB]" strokeWidth={1.5} />
+                        </div>
                         <h2 className="text-[17px] font-semibold tracking-tight">How's your mood, {name}?</h2>
-                        <p className="text-[12px] text-[var(--secondary-text)] opacity-40 mt-1">Select the frequency that matches your state.</p>
+                        <p className="text-[12px] text-[var(--secondary-text)] opacity-60 mt-1.5">Select the frequency that matches your state.</p>
                     </div>
 
                     <div className="space-y-2">
@@ -49,8 +57,8 @@ export default function DailyCheckIn({ name, onClose, onSave }: DailyCheckInProp
                                 className={cn(
                                     "w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left group",
                                     selected === m.val
-                                        ? "border-[var(--accent)] bg-[var(--surface)] shadow-xs"
-                                        : "border-[var(--border)] bg-white hover:bg-[var(--surface)] text-[var(--primary-text)]"
+                                        ? "border-[#D3D3FF] bg-[#D3D3FF]/10 shadow-sm"
+                                        : "border-transparent bg-[var(--surface)] hover:bg-[var(--surface)]/60 text-[var(--primary-text)]"
                                 )}
                             >
                                 <div className="flex items-center gap-3">
@@ -83,12 +91,11 @@ export default function DailyCheckIn({ name, onClose, onSave }: DailyCheckInProp
                                 }));
                             }
                         }}
-                        className="w-full h-10 btn-primary rounded-lg font-medium text-[13px] disabled:opacity-40 transition-all flex items-center justify-center gap-2 group"
+                        className="w-full h-[44px] bg-[#111118] hover:bg-black text-white rounded-xl font-medium text-[13px] disabled:opacity-40 transition-all flex items-center justify-center gap-2 group shadow-md hover:shadow-lg mt-2"
                     >
                         Save Entry <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.5} />
                     </button>
                 </div>
-
             </motion.div>
         </div>
     );

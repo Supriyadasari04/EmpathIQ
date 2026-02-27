@@ -108,20 +108,6 @@ export default function AnalyticsPage() {
                                         ))}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        const text = reflections.map(r => `[${r.date}] ${r.mood}: ${r.content}`).join('\n\n');
-                                        const blob = new Blob([text], { type: 'text/plain' });
-                                        const url = URL.createObjectURL(blob);
-                                        const a = document.createElement('a');
-                                        a.href = url;
-                                        a.download = 'my-empathiq-sanctuary.txt';
-                                        a.click();
-                                    }}
-                                    className="text-[11px] font-medium uppercase tracking-wider px-3 py-1.5 border border-[var(--border)] rounded-lg hover:bg-[var(--surface)] transition-all"
-                                >
-                                    Export Journal
-                                </button>
                             </div>
                         </div>
 
