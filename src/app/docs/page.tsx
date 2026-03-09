@@ -55,7 +55,9 @@ const DOC_SECTIONS = [
     }
 ];
 
-export default function DocsPage() {
+import { Suspense } from 'react';
+
+function DocsContentWrapper() {
     const { user } = useApp();
     const searchParams = useSearchParams();
     const [activeId, setActiveId] = useState('coach');
@@ -191,6 +193,19 @@ export default function DocsPage() {
         </div>
     );
 }
+
+export default function DocsPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+                <div className="animate-pulse text-[var(--secondary-text)] font-semibold tracking-widest uppercase text-[10px]">Loading Sanctuary Docs...</div>
+            </div>
+        }>
+            <DocsContentWrapper />
+        </Suspense>
+    );
+}
+
 
 function DocContent({ id }: { id: string }) {
     switch (id) {
