@@ -30,7 +30,8 @@ export default function SettingsPage() {
         userName: user.name,
         buddyName: buddy.name,
         buddyStyle: buddy.style,
-        buddyAge: buddy.age
+        buddyAge: buddy.age,
+        theme: buddy.theme
     });
 
     const handleSave = async () => {
@@ -149,26 +150,18 @@ export default function SettingsPage() {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-medium uppercase tracking-wider text-[var(--secondary-text)] opacity-40 px-0.5">Buddy Name</label>
-                                        <input
-                                            type="text"
-                                            value={profileData.buddyName}
-                                            onChange={(e) => setProfileData({ ...profileData, buddyName: e.target.value })}
-                                            className="w-full h-10 px-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] focus:bg-white focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all text-[13px] font-medium"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-medium uppercase tracking-wider text-[var(--secondary-text)] opacity-40 px-0.5">Persona</label>
+                                        <label className="text-[10px] font-medium uppercase tracking-wider text-[var(--secondary-text)] opacity-40 px-0.5">Atmosphere (Theme)</label>
                                         <div className="relative">
                                             <select
-                                                value={profileData.buddyStyle}
-                                                onChange={(e) => setProfileData({ ...profileData, buddyStyle: e.target.value as any })}
+                                                value={profileData.theme}
+                                                onChange={(e) => setProfileData({ ...profileData, theme: e.target.value as any })}
                                                 className="w-full h-10 px-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] focus:bg-white focus:ring-2 focus:ring-[var(--accent)] outline-none transition-all text-[13px] font-medium appearance-none"
                                             >
-                                                <option>Friendly</option>
-                                                <option>Clinical</option>
-                                                <option>Direct</option>
-                                                <option>Spiritual</option>
+                                                <option>Classic</option>
+                                                <option>Midnight</option>
+                                                <option>Sunset</option>
+                                                <option>Ocean</option>
+                                                <option>Candy</option>
                                             </select>
                                         </div>
                                     </div>

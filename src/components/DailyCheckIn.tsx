@@ -15,11 +15,11 @@ export default function DailyCheckIn({ name, onClose, onSave }: DailyCheckInProp
     const [selected, setSelected] = useState<number | null>(null);
 
     const moods = [
-        { val: 1, label: 'Distressed', icon: Frown, color: 'text-red-500', bg: 'bg-red-50' },
-        { val: 2, label: 'Low Resonance', icon: Frown, color: 'text-orange-500', bg: 'bg-orange-50' },
-        { val: 3, label: 'Steady Flow', icon: Meh, color: 'text-blue-500', bg: 'bg-blue-50' },
-        { val: 4, label: 'Bright Signal', icon: Smile, color: 'text-blue-900', bg: 'bg-slate-50' },
-        { val: 5, label: 'Radiant Peace', icon: Sparkles, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+        { val: 1, label: 'Feeling Heavy', icon: Frown, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { val: 2, label: 'A Bit Tired', icon: Frown, color: 'text-blue-500', bg: 'bg-blue-50' },
+        { val: 3, label: 'Finding Balance', icon: Meh, color: 'text-slate-500', bg: 'bg-slate-50' },
+        { val: 4, label: 'Feeling Light', icon: Smile, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { val: 5, label: 'Radiant & Clear', icon: Sparkles, color: 'text-orange-500', bg: 'bg-orange-50' },
     ];
 
     return (

@@ -29,7 +29,7 @@ interface Message {
 }
 
 export default function MentalHealthCoach() {
-    const { onboardingData, user, reportEmotion, addNotification, loading, chatMessages, addChatMessage, clearChatHistory: apiClearHistory } = useApp();
+    const { onboardingData, user, detectedEmotion, reportEmotion, addNotification, loading, chatMessages, addChatMessage, clearChatHistory: apiClearHistory } = useApp();
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [showCrisis, setShowCrisis] = useState(false);
@@ -51,7 +51,7 @@ export default function MentalHealthCoach() {
         if (loading) return;
         if (chatMessages.length === 0) {
             const goal = onboardingData?.goals || 'Personal Growth';
-            const greet = `Greetings ${user.name}. I am the EmpathIQ Clinical Coach. I've analyzed your primary focus—${goal}—and I'm ready for a deep-dive therapeutic session. How has your emotional landscape evolved since our last session?`;
+            const greet = `Hey ${user.name}, I'm so glad you're here. This is our safe space. I've been thinking about your focus on ${goal}—how are you really feeling today? I'm all ears.`;
             addChatMessage('assistant', greet);
         }
     }, [onboardingData, user.name, loading, chatMessages.length]);
@@ -138,16 +138,16 @@ export default function MentalHealthCoach() {
         }
 
         try {
-            const goal = onboardingData?.goals || 'Personal Growth';
-            const systemPrompt = `You are a professional, compassionate Mental Health Coach. 
-            You are supporting ${user.name} who is working towards: ${goal}.
-            
-            EMPATHY DIRECTIVES:
-            - If ${user.name} expresses any emotion, pause to validate it deeply before moving on.
-            - Do not sound like a machine. Use human-like transitions.
-            - Focus purely on dialogue and supportive coaching. 
-            - DO NOT suggest games, exercises, or physical movements. Stick to talk therapy and emotional processing.
-            - Keep responses under 4 sentences to maintain a conversational flow.`;
+            const { emotion } = detectedEmotion || { emotion: 'Neutral' };
+
+            const systemPrompt = `You are a warm, empathic wellness companion for ${user.name}. 
+            Your goal is ${onboardingData?.goals || 'Personal Growth'}.
+
+            SOUL-FIRST DIRECTIVES:
+            - ALWAYS validate ${user.name}'s feelings first. Use phrases like "I hear how heavy that feels" or "It makes sense that you'd feel this way."
+            - Mirror their emotional frequency. If they are ${emotion}, adjust your tone to match or provide a calming counter-balance if they are Sad.
+            - Speak directly from the soul. Avoid clinical jargon. 
+            - Use short, resonant sentences. (Max 3-4 sentences total).`;
 
             const conversation = [
                 { role: 'system', content: systemPrompt },
@@ -158,7 +158,10 @@ export default function MentalHealthCoach() {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: conversation })
+                body: JSON.stringify({
+                    messages: conversation,
+                    detectedMood: emotion
+                })
             });
 
             const data = await response.json();

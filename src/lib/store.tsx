@@ -11,6 +11,7 @@ export interface Reflection {
     mood: 'Happy' | 'Neutral' | 'Sad';
     type: 'Guided' | 'Free';
     prompt?: string;
+    distortions?: string[];
 }
 
 export interface Habit {
@@ -59,8 +60,13 @@ interface AppState {
         name: string;
         age: string;
         style: 'Friendly' | 'Clinical' | 'Direct' | 'Spiritual';
+        level: number;
+        xp: number;
+        theme: 'Classic' | 'Midnight' | 'Sunset' | 'Ocean' | 'Candy';
     };
+    addXP: (amount: number) => Promise<void>;
     detectedEmotion: { emotion: string; source: string; timestamp: number } | null;
+    emotionHistory: { emotion: string; source: string; timestamp: number }[];
     reflections: Reflection[];
     habits: Habit[];
     achievements: Achievement[];
@@ -98,6 +104,12 @@ interface AppState {
     addChatMessage: (role: 'user' | 'assistant', content: string) => Promise<void>;
     clearChatHistory: () => Promise<void>;
     getStats: () => { score: number; unlockedCount: number };
+    getPredictiveInsight: () => number[];
+    instantValidation: string | null;
+    setInstantValidation: (msg: string | null) => void;
+    getDynamicPrompt: (mood?: string) => string;
+    activeToast: Notification | null;
+    setActiveToast: (toast: Notification | null) => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -108,10 +120,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         email: '',
         isLoggedIn: false
     });
-    const [buddy, setBuddy] = useState<{ name: string, age: string, style: 'Friendly' | 'Clinical' | 'Direct' | 'Spiritual' }>({
+    const [buddy, setBuddy] = useState<{ name: string, age: string, style: 'Friendly' | 'Clinical' | 'Direct' | 'Spiritual', level: number, xp: number, theme: 'Classic' | 'Midnight' | 'Sunset' | 'Ocean' | 'Candy' }>({
         name: 'Nexus',
         age: '24',
-        style: 'Friendly'
+        style: 'Friendly',
+        level: 1,
+        xp: 0,
+        theme: 'Classic'
     });
     const [onboardingData, setOnboardingData] = useState<any>(null);
     const [hasOnboarded, setHasOnboarded] = useState<boolean>(() => {
@@ -122,6 +137,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     const [loading, setLoading] = useState(true);
     const [detectedEmotion, setDetectedEmotion] = useState<{ emotion: string; source: string; timestamp: number } | null>(null);
+    const [emotionHistory, setEmotionHistory] = useState<{ emotion: string; source: string; timestamp: number }[]>([]);
     const [reflections, setReflections] = useState<Reflection[]>([]);
     const [habits, setHabits] = useState<Habit[]>([]);
     const [achievements, setAchievements] = useState<Achievement[]>([
@@ -140,6 +156,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [moodPixels, setMoodPixels] = useState<{ [date: string]: number }>({});
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [instantValidation, setInstantValidation] = useState<string | null>(null);
+    const [activeToast, setActiveToast] = useState<Notification | null>(null);
     const [privacySettings, setPrivacySettings] = useState({
         privacyShield: true,
         localStore: true,
@@ -197,7 +215,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setMoodPixels({});
         setChatMessages([]);
         setNotifications([]);
-        setBuddy({ name: 'Nexus', age: '24', style: 'Friendly' });
+        setBuddy({ name: 'Nexus', age: '24', style: 'Friendly', level: 1, xp: 0, theme: 'Classic' });
         setHasOnboarded(false);
         if (typeof window !== 'undefined') {
             localStorage.removeItem('empathiq_onboarded');
@@ -242,7 +260,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
             if (hasAnyData) {
                 if (stats) {
-                    setBuddy({ name: stats.name, age: stats.age, style: stats.style });
+                    setBuddy({
+                        name: stats.name,
+                        age: stats.age,
+                        style: stats.style,
+                        level: stats.level || 1,
+                        xp: stats.xp || 0,
+                        theme: stats.theme || 'Classic'
+                    });
                     setOnboardingData(stats.onboarding_json || null);
                 }
                 setHasOnboarded(true);
@@ -261,7 +286,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             console.error('Error fetching data:', err);
         } finally {
             setLoading(false);
+            checkInactivity();
         }
+    };
+
+    const checkInactivity = () => {
+        if (typeof window === 'undefined') return;
+
+        const lastLogin = localStorage.getItem('empathiq_last_active');
+        const now = Date.now();
+
+        if (lastLogin) {
+            const diff = now - parseInt(lastLogin);
+            const hours = diff / (1000 * 60 * 60);
+
+            if (hours >= 24) {
+                setTimeout(() => {
+                    addNotification({
+                        title: buddy.name,
+                        message: `Hey! I've really missed you. 🤍 I noticed you haven't logged your mood in over a day. Everything okay?`,
+                        type: 'coach'
+                    });
+                }, 2000);
+            }
+        }
+        localStorage.setItem('empathiq_last_active', now.toString());
     };
 
     const login = async (email: string, password: string) => {
@@ -320,6 +369,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const reportEmotion = (emotion: string, source: string) => {
         const payload = { emotion, source, timestamp: Date.now() };
         setDetectedEmotion(payload);
+        setEmotionHistory(prev => [...prev.slice(-99), payload]); // Keep last 100 points
         window.dispatchEvent(new CustomEvent('emotion_detected', { detail: payload }));
     };
 
@@ -327,10 +377,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (!currentUser) return;
 
+        let defaultTheme: any = 'Classic';
+        if (data.userAge === 'Under 18') defaultTheme = 'Candy';
+        else if (data.userAge === '18-24') defaultTheme = 'Ocean';
+        else if (data.userAge === '25-34') defaultTheme = 'Midnight';
+        else if (data.userAge === '35-44') defaultTheme = 'Sunset';
+
         const newBuddy = {
             name: data.buddyName || "Nexus",
             age: data.buddyAge || "24",
-            style: data.buddyStyle || "Friendly"
+            style: data.buddyStyle || "Friendly",
+            level: 1,
+            xp: 0,
+            theme: data.theme || defaultTheme
         };
         setBuddy(newBuddy);
         setOnboardingData(data);
@@ -353,6 +412,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if ((data.goalCategories || []).length >= 3) {
             unlockAchievement('6');
         }
+    };
+
+    const addXP = async (amount: number) => {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) return;
+
+        setBuddy(prev => {
+            const newXP = prev.xp + amount;
+            const xpToNextLevel = prev.level * 100;
+            let newLevel = prev.level;
+            let finalXP = newXP;
+
+            if (newXP >= xpToNextLevel) {
+                newLevel += 1;
+                finalXP = newXP - xpToNextLevel;
+                addNotification({
+                    title: 'Buddy Level Up!',
+                    message: `${prev.name} has reached Level ${newLevel}!`,
+                    type: 'achievement'
+                });
+            }
+
+            const updatedBuddy = { ...prev, level: newLevel, xp: finalXP };
+
+            // Sync to DB
+            supabase.from('buddy_stats').update({
+                level: newLevel,
+                xp: finalXP
+            }).eq('user_id', currentUser.id).then();
+
+            return updatedBuddy;
+        });
     };
 
     const updatePrivacy = (key: 'privacyShield' | 'localStore' | 'aiTraining', value: boolean) => {
@@ -380,26 +471,72 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     const addNotification = async (notification: Omit<Notification, 'id' | 'time' | 'unread'>) => {
-        const newNotif = {
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-            ...notification,
+        const newNotification: Notification = {
+            id: Math.random().toString(36).substr(2, 9),
             unread: true,
-            time: 'Just now'
+            time: 'Just now',
+            ...notification
         };
-        setNotifications(prev => [newNotif as Notification, ...prev]);
-        await supabase.from('notifications').insert(newNotif);
+        setNotifications(prev => [newNotification, ...prev]);
+        setActiveToast(newNotification);
+        await supabase.from('notifications').insert(newNotification);
     };
 
     const addReflection = async (reflection: Omit<Reflection, 'id' | 'date'>) => {
+        // Perform sentiment and distortion check
+        let detectedMood = reflection.mood;
+        let detectedDistortions = [];
+
+        try {
+            const resp = await fetch('/api/analyze-sentiment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: reflection.content })
+            });
+            const data = await resp.json();
+            if (data.mood) detectedMood = data.mood;
+            if (data.distortions) detectedDistortions = data.distortions;
+        } catch (e) {
+            console.error("Sentiment analysis failed:", e);
+        }
+
         const newEntry = {
             id: `refl-${Date.now()}`,
             ...reflection,
+            mood: detectedMood,
+            distortions: detectedDistortions,
             date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         };
+
         setReflections(prev => [newEntry as Reflection, ...prev]);
         await supabase.from('reflections').insert(newEntry);
-        reportEmotion(reflection.mood, 'Reflection');
+
+        addXP(30);
+        reportEmotion(detectedMood, 'Reflection');
         unlockAchievement('1');
+
+        // Innovation 4: Trigger Instant Validation Bubble
+        try {
+            const systemPrompt = `You are a warm, empathic wellness buddy named ${buddy.name}. 
+            The user just wrote a reflection and is feeling ${detectedMood}.
+            Give them ONE sentence of deep, resonant validation. 
+            Do not give advice. Just let them know they are seen.`;
+
+            const resp = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: reflection.content }],
+                    detectedMood: detectedMood
+                })
+            });
+            const chatData = await resp.json();
+            if (chatData.content) {
+                setInstantValidation(chatData.content);
+            }
+        } catch (e) {
+            console.error("Instant validation failed:", e);
+        }
     };
 
     const deleteReflection = async (id: string) => {
@@ -477,9 +614,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             const newMissions = prev.map(m => m.id === id ? { ...m, completed: !m.completed } : m);
             const mission = newMissions.find(m => m.id === id);
             if (mission?.completed) {
+                addXP(50);
                 addNotification({
                     title: 'Mission Accomplished',
-                    message: `You've completed: ${mission.label}. Great job staying on track!`,
+                    message: `You've completed: ${mission.label}. +50 XP`,
                     type: 'mission'
                 });
             }
@@ -513,11 +651,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { score, unlockedCount };
     };
 
+    const getPredictiveInsight = () => {
+        const dayCounts: { [key: number]: { total: number, low: number } } = {};
+        Object.entries(moodPixels).forEach(([date, intensity]) => {
+            const day = new Date(date).getDay();
+            if (!dayCounts[day]) dayCounts[day] = { total: 0, low: 0 };
+            dayCounts[day].total++;
+            if (intensity <= 2) dayCounts[day].low++;
+        });
+
+        const heavyDays = Object.entries(dayCounts)
+            .filter(([_, stats]) => stats.total >= 3 && (stats.low / stats.total) >= 0.5)
+            .map(([day]) => parseInt(day));
+
+        return heavyDays;
+    };
+
+    const getDynamicPrompt = (mood?: string) => {
+        const prompts: Record<string, string[]> = {
+            Happy: [
+                "What was the highlight of your day?",
+                "How did you make someone else smile today?",
+                "What are you most grateful for right now?",
+                "What's one thing you're proud of yourself for?"
+            ],
+            Sad: [
+                "What is weighing most heavily on your heart?",
+                "If your sadness was a flavor, what would it be?",
+                "What's one small thing that felt okay today?",
+                "If you could say anything to your younger self right now, what would it be?"
+            ],
+            Neutral: [
+                "How did your day unfold?",
+                "What's one thing you noticed today that usually goes unseen?",
+                "How does your body feel in this moment?",
+                "What's one intention you have for tomorrow?"
+            ]
+        };
+        const m = mood || 'Neutral';
+        const list = prompts[m] || prompts.Neutral;
+        return list[Math.floor(Math.random() * list.length)];
+    };
+
     return (
         <AppContext.Provider value={{
             user,
             buddy,
             detectedEmotion,
+            emotionHistory,
             reflections,
             habits,
             achievements,
@@ -531,6 +712,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             hasOnboarded,
             reportEmotion,
             setOnboarding,
+            addXP,
+            getPredictiveInsight,
+            instantValidation,
+            setInstantValidation,
+            getDynamicPrompt,
+            activeToast,
+            setActiveToast,
             updatePrivacy,
             markNotificationRead,
             markAllNotificationsRead,

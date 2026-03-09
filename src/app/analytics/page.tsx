@@ -148,63 +148,219 @@ export default function AnalyticsPage() {
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/5 blur-[100px] rounded-full -translate-x-1/2 translate-y-1/2 pointer-events-none" />
                     </section>
 
-                    {/* AI Synthesis & Insights */}
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                        <section className="card bg-white p-6 lg:col-span-3">
-                            <h2 className="text-[11px] font-medium uppercase tracking-wider text-[var(--secondary-text)] mb-6">Reflection Synthesis</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                                {Object.entries(emotionDistribution).length > 0 ? (
-                                    Object.entries(emotionDistribution as Record<string, number>).map(([mood, count]) => {
-                                        const percentage = Math.round((count / reflections.length) * 100);
-                                        return (
-                                            <div key={mood} className="space-y-3">
-                                                <div className="flex justify-between items-end">
-                                                    <span className="text-[13px] font-medium flex items-center gap-2">
-                                                        <div className={cn(
-                                                            "w-1.5 h-1.5 rounded-full",
-                                                            mood === 'Happy' ? "bg-green-400" : mood === 'Neutral' ? "bg-blue-300" : "bg-red-400"
-                                                        )} />
-                                                        {mood}
-                                                    </span>
-                                                    <span className="text-[11px] text-[var(--secondary-text)] opacity-40">{percentage}%</span>
-                                                </div>
-                                                <div className="h-1 w-full bg-[var(--surface)] rounded-full overflow-hidden">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${percentage}%` }}
-                                                        transition={{ duration: 1 }}
-                                                        className="h-full bg-[var(--accent)] rounded-full"
-                                                    />
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className="col-span-3 py-4 text-center text-[var(--secondary-text)] opacity-20 text-[13px]">Awaiting signals...</div>
-                                )}
+                    {/* Emotional Wave Analysis (Line Chart) */}
+                    <section className="card bg-white p-6 min-h-[400px]">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                            <div className="space-y-1">
+                                <h2 className="text-[18px] font-semibold tracking-tight flex items-center gap-2">
+                                    <BarChart3 className="w-5 h-5 text-[var(--accent)]" />
+                                    Emotional Resonance Wave
+                                </h2>
+                                <p className="text-[12px] text-[var(--secondary-text)] opacity-60">
+                                    A multi-source analysis of your emotional pulse (Pixels + AI Detection).
+                                </p>
                             </div>
-                        </section>
+                            <div className="flex items-center gap-4 bg-[var(--surface)] p-2 rounded-lg border border-[var(--border)]">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-sm" />
+                                    <span className="text-[10px] font-semibold text-[var(--secondary-text)] uppercase tracking-wider">Mood Intensity</span>
+                                </div>
+                            </div>
+                        </div>
 
-                        <section className="card bg-[var(--accent)] text-[var(--primary-text)] p-6 flex flex-col justify-between relative overflow-hidden shadow-sm border-none">
-                            <div className="relative z-10">
-                                <h3 className="text-[11px] font-medium uppercase tracking-wider opacity-60 mb-2">Resonance</h3>
-                                {Object.entries(emotionDistribution).length > 0 ? (
-                                    <div>
-                                        <h4 className="text-[20px] font-semibold tracking-tight">
-                                            {Object.entries(emotionDistribution as Record<string, number>).sort((a, b) => b[1] - a[1])[0][0]}
-                                        </h4>
-                                    </div>
-                                ) : (
-                                    <p className="text-[11px] font-medium uppercase opacity-20 mt-2">No Signal</p>
-                                )}
+                        <div className="h-[280px] w-full relative group">
+                            <InteractiveWaveChart />
+                        </div>
+
+                        <div className="grid grid-cols-2 mt-6 p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
+                            <div className="text-center border-r border-[var(--border)]">
+                                <span className="text-[10px] text-[var(--secondary-text)] uppercase font-bold tracking-widest opacity-40 block mb-1">30 Days Ago</span>
+                                <span className="text-[12px] font-medium">Cycle Start</span>
                             </div>
-                        </section>
-                    </div>
+                            <div className="text-center">
+                                <span className="text-[10px] text-[var(--secondary-text)] uppercase font-bold tracking-widest opacity-40 block mb-1">Present Moment</span>
+                                <span className="text-[12px] font-medium text-[var(--accent)]">Live Data</span>
+                            </div>
+                        </div>
+                    </section>
                 </>
             )}
         </div>
     );
 }
+
+function InteractiveWaveChart() {
+    const { moodPixels, emotionHistory } = useApp();
+    const [hoveredPoint, setHoveredPoint] = useState<any>(null);
+
+    // Combine data sources
+    const combinedData: { timestamp: number; intensity: number; label: string; source: string }[] = [];
+
+    // Add pixels
+    const sortedPixDates = Object.keys(moodPixels).sort().slice(-20);
+    sortedPixDates.forEach(date => {
+        combinedData.push({
+            timestamp: new Date(date).getTime(),
+            intensity: moodPixels[date],
+            label: 'Daily Pixel',
+            source: 'Manual Log'
+        });
+    });
+
+    // Add recent AI detections
+    emotionHistory.slice(-10).forEach(eh => {
+        combinedData.push({
+            timestamp: eh.timestamp,
+            intensity: eh.emotion === 'Happy' ? 5 : eh.emotion === 'Neutral' ? 3 : 1,
+            label: eh.emotion,
+            source: eh.source || 'AI Discovery'
+        });
+    });
+
+    // Sort by time
+    combinedData.sort((a, b) => a.timestamp - b.timestamp);
+
+    if (combinedData.length < 2) {
+        return (
+            <div className="h-full flex items-center justify-center italic text-[12px] text-[var(--secondary-text)] opacity-40">
+                Gathering more emotional data points for analysis...
+            </div>
+        );
+    }
+
+    const points = combinedData.map((d, i) => {
+        const x = (i / (combinedData.length - 1)) * 100;
+        const y = 80 - (d.intensity / 5) * 60; // Keep in center-ish of graph
+        return { x, y, ...d };
+    });
+
+    // Generate smooth path using Cubic Bezier
+    const generateSmoothPath = (pts: any[]) => {
+        if (pts.length < 2) return "";
+        let d = `M ${pts[0].x} ${pts[0].y}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[i];
+            const p1 = pts[i + 1];
+            const cp1x = p0.x + (p1.x - p0.x) / 2;
+            const cp1y = p0.y;
+            const cp2x = p0.x + (p1.x - p0.x) / 2;
+            const cp2y = p1.y;
+            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+        }
+        return d;
+    };
+
+    const pathD = generateSmoothPath(points);
+    const areaD = `${pathD} L 100 100 L 0 100 Z`;
+
+    return (
+        <div className="relative w-full h-full">
+            <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="waveFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+                    </linearGradient>
+                </defs>
+
+                {/* Area under wave */}
+                <motion.path
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    d={areaD}
+                    fill="url(#waveFill)"
+                />
+
+                {/* The Smooth Wave Line */}
+                <motion.path
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 2, ease: "easeInOut" }}
+                    d={pathD}
+                    stroke="var(--accent)"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeLinecap="round"
+                    vectorEffect="non-scaling-stroke"
+                />
+
+                {/* Pindrops (Interactive Points) */}
+                {points.map((p, i) => (
+                    <g key={i} className="group/point">
+                        {/* Pulse Effect on Hover */}
+                        <motion.circle
+                            cx={p.x}
+                            cy={p.y}
+                            r="0"
+                            className="group-hover/point:r-4 transition-all duration-300 fill-[var(--accent)] opacity-20"
+                        />
+                        <motion.circle
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 1 + (i * 0.05) }}
+                            cx={p.x}
+                            cy={p.y}
+                            r="1.2"
+                            fill="white"
+                            stroke="var(--accent)"
+                            strokeWidth="0.8"
+                            className="transition-all cursor-pointer group-hover/point:stroke-[1.5]"
+                            onMouseEnter={() => setHoveredPoint(p)}
+                            onMouseLeave={() => setHoveredPoint(null)}
+                        />
+                        {/* Invisible larger hit area */}
+                        <rect
+                            x={p.x - 2}
+                            y={0}
+                            width={4}
+                            height={100}
+                            fill="transparent"
+                            className="cursor-pointer"
+                            onMouseEnter={() => setHoveredPoint(p)}
+                            onMouseLeave={() => setHoveredPoint(null)}
+                        />
+                    </g>
+                ))}
+            </svg>
+
+            {/* Tooltip */}
+            <AnimatePresence>
+                {hoveredPoint && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                        className="absolute pointer-events-none z-50 bg-[var(--surface)] border border-[var(--border)] p-3 rounded-xl shadow-xl min-w-[140px]"
+                        style={{
+                            left: `${hoveredPoint.x}%`,
+                            top: `${hoveredPoint.y}%`,
+                            transform: 'translate(-50%, -120%)'
+                        }}
+                    >
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[9px] uppercase font-bold text-[var(--secondary-text)] opacity-50 tracking-widest">{hoveredPoint.source}</span>
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="text-[13px] font-bold">{hoveredPoint.label}</span>
+                                <div className={cn("w-2 h-2 rounded-full", getIntensityColor(hoveredPoint.intensity))} />
+                            </div>
+                            <span className="text-[10px] text-[var(--secondary-text)] font-medium">
+                                {new Date(hoveredPoint.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+function getIntensityColor(val: number) {
+    if (val >= 4) return 'bg-yellow-400';
+    if (val >= 3) return 'bg-blue-400';
+    return 'bg-red-400';
+}
+
+
 
 function Pixel({ dateKey, intensity, editingDate, setEditingDate, setMoodPixel }: {
     dateKey: string;
@@ -271,13 +427,13 @@ function Pixel({ dateKey, intensity, editingDate, setEditingDate, setMoodPixel }
 
 function getPixelColor(intensity: number) {
     switch (intensity) {
-        case 0: return 'bg-blue-600/[0.03]';
+        case 0: return 'bg-[var(--secondary-text)] opacity-10'; // Subtle but visible
         case 1: return 'bg-red-400';    // Distressed
         case 2: return 'bg-orange-300'; // Low
         case 3: return 'bg-blue-300';   // Steady
         case 4: return 'bg-blue-600';      // Bright (Deep)
         case 5: return 'bg-yellow-400'; // Radiant
-        default: return 'bg-blue-600/[0.03]';
+        default: return 'bg-[var(--secondary-text)] opacity-10';
     }
 }
 

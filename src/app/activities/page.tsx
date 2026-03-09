@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Wind,
@@ -22,7 +22,7 @@ const ACTIVITIES = [
     {
         id: 'breathing',
         title: 'Breathing Sanctuary',
-        desc: 'Regulate your nervous system with the 4-7-8 technique.',
+        desc: 'Inhale peace, exhale tension with the 4-7-8 rhythm.',
         icon: Wind,
         color: 'text-blue-500',
         bg: 'bg-blue-50',
@@ -32,42 +32,32 @@ const ACTIVITIES = [
     {
         id: 'grounding',
         title: 'Grounding Roots',
-        desc: 'Re-center yourself using the 5-4-3-2-1 sensory method.',
+        desc: 'Bring your mind home using your five senses.',
         icon: Shield,
         color: 'text-green-500',
         bg: 'bg-green-50',
-        intensity: 'Medium',
+        intensity: 'Steady',
         duration: '5 min'
     },
     {
         id: 'gratitude',
         title: 'Gratitude Sparks',
-        desc: 'Illuminate your mood by noting small wins.',
+        desc: 'Illuminate the small joys that make life beautiful.',
         icon: Heart,
         color: 'text-orange-500',
         bg: 'bg-orange-50',
-        intensity: 'Low',
+        intensity: 'Warm',
         duration: '3 min'
     },
     {
         id: 'declutter',
-        title: 'Mind Declutter',
-        desc: 'A digital space to dump and dissolve stressful thoughts.',
+        title: 'Heart Release',
+        desc: 'A safe corner to pour out and dissolve heavy thoughts.',
         icon: Trash2,
         color: 'text-purple-500',
         bg: 'bg-purple-50',
-        intensity: 'High',
-        duration: 'Unlimited'
-    },
-    {
-        id: 'focus',
-        title: 'Focus Sprint',
-        desc: 'Gentle productivity blocks with mindful transitions.',
-        icon: Timer,
-        color: 'text-red-500',
-        bg: 'bg-red-50',
-        intensity: 'Medium',
-        duration: '25 min'
+        intensity: 'Deep',
+        duration: 'Flow'
     }
 ];
 
@@ -79,10 +69,10 @@ export default function ActivitiesPage() {
             <header className="space-y-1">
                 <div className="flex items-center gap-2 text-[var(--secondary-text)] opacity-40">
                     <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    <span className="text-[11px] font-medium uppercase tracking-widest">Protocols</span>
+                    <span className="text-[11px] font-medium uppercase tracking-widest">Rituals</span>
                 </div>
-                <h1 className="text-[22px] font-semibold tracking-tight">Therapeutic Sanctuary</h1>
-                <p className="text-[13px] text-[var(--secondary-text)] leading-relaxed max-w-xl">Medically-inspired sessions designed to help you regulate and find peace.</p>
+                <h1 className="text-[22px] font-semibold tracking-tight">Joy Practices</h1>
+                <p className="text-[13px] text-[var(--secondary-text)] leading-relaxed max-w-xl">A collection of gentle exercises to help you reconnect with your inner light.</p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -224,9 +214,24 @@ function ActivityModal({ id, onClose }: { id: string; onClose: () => void }) {
 
 // Sub-components for each exercise
 function BreathingExercise({ onComplete }: { onComplete: () => void }) {
+    const { buddy, addNotification } = useApp();
     const [cycle, setCycle] = useState<'Inhale' | 'Hold' | 'Exhale'>('Inhale');
     const [duration, setDuration] = useState(4);
     const [cyclesLeft, setCyclesLeft] = useState(4);
+
+    React.useEffect(() => {
+        const messages: Record<string, string> = {
+            Inhale: "Take a deep, slow breath in with me... 🌬️",
+            Hold: "Just hold it there for a moment. You're doing great.",
+            Exhale: "Let it all out. Release that tension. 🕊️"
+        };
+
+        addNotification({
+            title: buddy.name,
+            message: messages[cycle],
+            type: 'coach'
+        });
+    }, [cycle, buddy.name]);
 
     React.useEffect(() => {
         if (cyclesLeft === 0) {
@@ -278,20 +283,29 @@ function BreathingExercise({ onComplete }: { onComplete: () => void }) {
 }
 
 function GroundingExercise({ onComplete }: { onComplete: () => void }) {
+    const { buddy, addNotification } = useApp();
     const prompts = [
-        "Find 5 things you can SEE around you.",
-        "Identify 4 things you can TOUCH right now.",
-        "Listen for 3 things you can HEAR.",
-        "Notice 2 things you can SMELL.",
-        "Tell me 1 thing you can TASTE."
+        { label: "Find 5 things you can SEE around you.", msg: "I'm looking with you. What's the first thing your eyes find? 👁️" },
+        { label: "Identify 4 things you can TOUCH right now.", msg: "I can feel the ground beneath us. What textures are around you? 👐" },
+        { label: "Listen for 3 things you can HEAR.", msg: "Listen closely... I hear the hum of the world. What do you hear? 👂" },
+        { label: "Notice 2 things you can SMELL.", msg: "Is there a scent in the air? Maybe a hint of tea or rain? 👃" },
+        { label: "Tell me 1 thing you can TASTE.", msg: "Almost there. One final focus. You're doing so well. 👅" }
     ];
     const [idx, setIdx] = useState(0);
+
+    React.useEffect(() => {
+        addNotification({
+            title: buddy.name,
+            message: prompts[idx].msg,
+            type: 'coach'
+        });
+    }, [idx, buddy.name]);
 
     return (
         <div className="space-y-12 py-6 text-center">
             <div className="space-y-4">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-900/20">Sensory Phase 0{idx + 1}</span>
-                <h3 className="text-2xl font-bold leading-tight">{prompts[idx]}</h3>
+                <h3 className="text-2xl font-bold leading-tight">{prompts[idx].label}</h3>
             </div>
             <div className="flex justify-center flex-wrap gap-3">
                 {Array.from({ length: 5 - idx }).map((_, i) => (

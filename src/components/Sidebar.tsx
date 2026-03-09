@@ -16,19 +16,17 @@ import {
     ChevronRight,
     Sparkles
 } from 'lucide-react';
-import NotificationBell from './NotificationBell';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 import { useApp } from '@/lib/store';
 
 const navItems = [
-    { icon: Home, label: 'Omni Dashboard', href: '/dashboard' },
-    { icon: Brain, label: 'Clinical Coach', href: '/coach' },
-    { icon: Sparkles, label: 'Therapeutic Sanctuary', href: '/activities' },
-    { icon: PlusCircle, label: 'Mind Logs', href: '/reflections' },
-    { icon: BarChart3, label: 'Empathy Analytics', href: '/analytics' },
-    { icon: CheckCircle2, label: 'Habit Rituals', href: '/habits' },
-    { icon: Trophy, label: 'Achievements', href: '/achievements' },
+    { icon: Home, label: 'My Sanctuary', href: '/dashboard' },
+    { icon: Brain, label: "Aura's Space", href: '/coach' },
+    { icon: Sparkles, label: 'Wellness Journey', href: '/activities' },
+    { icon: PlusCircle, label: 'Heart Journal', href: '/reflections' },
+    { icon: BarChart3, label: 'Emotional Pulse', href: '/analytics' },
+    { icon: CheckCircle2, label: 'Daily Rhythms', href: '/habits' },
+    { icon: Trophy, label: 'Milestones', href: '/achievements' },
 ];
 
 export default function Sidebar() {

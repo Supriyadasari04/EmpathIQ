@@ -15,19 +15,27 @@ import {
     Filter,
     Plus,
     Search,
-    Trash2
+    Trash2,
+    AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp, Reflection } from '@/lib/store';
 
 export default function ReflectionsPage() {
-    const { reflections, addReflection, deleteReflection, reportEmotion } = useApp();
+    const { reflections, addReflection, deleteReflection, reportEmotion, instantValidation, setInstantValidation, buddy, getDynamicPrompt, detectedEmotion } = useApp();
     const [view, setView] = useState<'list' | 'editor'>('list');
     const [editorType, setEditorType] = useState<'Guided' | 'Free'>('Free');
     const [selectedEntry, setSelectedEntry] = useState<Reflection | null>(null);
     const [filter, setFilter] = useState<'All' | 'Guided' | 'Free'>('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [content, setContent] = useState('');
+    const [activePrompt, setActivePrompt] = useState('');
+
+    React.useEffect(() => {
+        if (view === 'editor' && editorType === 'Guided') {
+            setActivePrompt(getDynamicPrompt(detectedEmotion?.emotion));
+        }
+    }, [view, editorType, getDynamicPrompt, detectedEmotion]);
 
     const filteredEntries = reflections
         .filter(e => filter === 'All' || e.type === filter)
@@ -54,15 +62,20 @@ export default function ReflectionsPage() {
             console.error('Mood detection failed, falling back to Neutral');
         }
 
-        const prompt = editorType === 'Guided' ? 'What is one thing you did today that made you proud of yourself?' : undefined;
-        addReflection({
+        const reflectionPrompt = editorType === 'Guided' ? activePrompt : undefined;
+        await addReflection({
             content,
             mood: detectedMood,
             type: editorType,
-            prompt
+            prompt: reflectionPrompt
         });
 
         setIsAnalyzing(false);
+        // We stay in editor view until validation is cleared or user clicks away
+    };
+
+    const handleBackToList = () => {
+        setInstantValidation(null);
         setContent('');
         setView('list');
     };
@@ -165,6 +178,16 @@ export default function ReflectionsPage() {
                                             {entry.prompt && <span className="text-[11px] text-[var(--secondary-text)] opacity-40 line-clamp-1">/ {entry.prompt}</span>}
                                         </div>
                                         <p className="text-[13px] text-[var(--secondary-text)] leading-relaxed line-clamp-2">{entry.content}</p>
+                                        {/* Innovation 3: Distortions Badge */}
+                                        {entry.distortions && entry.distortions.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 pt-1">
+                                                {entry.distortions.map(d => (
+                                                    <span key={d} className="text-[8px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 uppercase tracking-tighter">
+                                                        AI: {d}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2 self-center">
                                         <button
@@ -190,13 +213,37 @@ export default function ReflectionsPage() {
                 ) : (
                     <motion.div
                         key="editor"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        className="card bg-white p-8 min-h-[500px] flex flex-col relative"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="card bg-white p-8 min-h-[500px] flex flex-col relative overflow-hidden"
                     >
+                        <AnimatePresence>
+                            {instantValidation && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="absolute inset-0 z-50 bg-[var(--mood-bg)]/95 backdrop-blur-md flex flex-col items-center justify-center p-12 text-center"
+                                >
+                                    <div className="w-16 h-16 bg-[var(--mood-accent)] rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+                                        <Sparkles className="w-8 h-8 text-[var(--primary-text)] opacity-60" />
+                                    </div>
+                                    <h3 className="text-[18px] font-semibold mb-4 tracking-tight">{buddy.name} says...</h3>
+                                    <p className="text-[16px] text-[var(--secondary-text)] leading-relaxed italic mb-8 max-w-md">
+                                        "{instantValidation}"
+                                    </p>
+                                    <button
+                                        onClick={handleBackToList}
+                                        className="btn-primary px-8 rounded-full"
+                                    >
+                                        Continue Journey
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                         <button
-                            onClick={() => setView('list')}
+                            onClick={handleBackToList}
                             className="absolute top-6 right-6 p-2 hover:bg-[var(--surface)] rounded-lg transition-colors"
                         >
                             <X className="w-5 h-5" strokeWidth={1.5} />
@@ -208,9 +255,12 @@ export default function ReflectionsPage() {
                             </div>
 
                             {editorType === 'Guided' && (
-                                <div className="mb-8 p-6 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
-                                    <p className="text-[10px] font-medium text-[var(--secondary-text)] opacity-60 uppercase tracking-wider mb-2">Prompt</p>
-                                    <p className="text-[17px] font-medium text-[var(--primary-text)] leading-tight">What is one thing you did today that made you proud of yourself?</p>
+                                <div className="space-y-4 mb-8">
+                                    <div className="p-6 bg-[var(--mood-bg)] rounded-2xl border border-[var(--mood-accent)] shadow-sm">
+                                        <p className="text-[15px] text-[var(--primary-text)] font-semibold leading-relaxed italic">
+                                            "{activePrompt}"
+                                        </p>
+                                    </div>
                                 </div>
                             )}
 
@@ -218,7 +268,7 @@ export default function ReflectionsPage() {
                                 autoFocus
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                placeholder="Start typing here..."
+                                placeholder="Let it all out here... this is your safe space."
                                 className="flex-1 w-full bg-transparent border-none outline-none text-[16px] leading-relaxed resize-none text-[var(--primary-text)] placeholder:opacity-20 min-h-[250px]"
                             />
 
@@ -282,6 +332,19 @@ export default function ReflectionsPage() {
                                 <div className="text-[16px] text-[var(--secondary-text)] leading-relaxed whitespace-pre-wrap">
                                     {selectedEntry.content}
                                 </div>
+
+                                {/* Innovation 3: Detailed Distortion Analysis */}
+                                {selectedEntry.distortions && selectedEntry.distortions.length > 0 && (
+                                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100 space-y-2">
+                                        <div className="flex items-center gap-2 text-orange-700">
+                                            <AlertCircle className="w-4 h-4" />
+                                            <h3 className="text-[12px] font-bold uppercase tracking-wider">A Gentle Perspective</h3>
+                                        </div>
+                                        <p className="text-[12px] text-orange-800/80 leading-relaxed font-medium">
+                                            I noticed a few common "thinking traps" in your words—like **{selectedEntry.distortions.join(', ')}**. They are so human, and you're doing great just by noticing them.
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="flex items-center justify-between pt-6 border-t border-[var(--border)]">
                                     <div className="flex items-center gap-2 px-3 py-1 bg-[var(--surface)] rounded-md border border-[var(--border)]">

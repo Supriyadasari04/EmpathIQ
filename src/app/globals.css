@@ -13,6 +13,64 @@
   --border: rgba(0, 0, 0, 0.04);
   --radius: 12px;
   --sidebar-width: 220px;
+
+  /* Atmospheric Shifting Variables */
+  --mood-bg: var(--background);
+  --mood-accent: var(--accent);
+}
+
+[data-theme="Midnight"] {
+  --background: #0F172A;
+  --surface: #1E293B;
+  --card: #1E293B;
+  --primary-text: #F1F5F9;
+  --secondary-text: #94A3B8;
+  --accent: #38bdf8;
+  --accent-soft: #1E3A8A; /* Darker blue but more colorful */
+  --accent-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.12); /* Brighter border */
+}
+
+[data-theme="Sunset"] {
+  --background: #FFF7ED;
+  --surface: #FFEDD5;
+  --card: #FFFFFF;
+  --primary-text: #431407;
+  --secondary-text: #9A3412;
+  --accent: #FB923C;
+  --accent-soft: #FFEDD5;
+  --accent-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="Ocean"] {
+  --background: #F0F9FF;
+  --surface: #E0F2FE;
+  --card: #FFFFFF;
+  --primary-text: #082F49;
+  --secondary-text: #0369A1;
+  --accent: #0EA5E9;
+  --accent-soft: #E0F2FE;
+  --accent-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="Candy"] {
+  --background: #FFF1F2;
+  --surface: #FFE4E6;
+  --card: #FFFFFF;
+  --primary-text: #4C0519;
+  --secondary-text: #9F1239;
+  --accent: #FB7185;
+  --accent-soft: #FFE4E6;
+  --accent-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.05);
+}
+
+[data-mood="Happy"] {
+  --mood-bg: var(--background);
+  /* Keep theme bg but overlay if needed */
+  --mood-accent: var(--accent);
 }
 
 * {

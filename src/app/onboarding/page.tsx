@@ -10,64 +10,64 @@ import { useApp } from '@/lib/store';
 const steps = [
     {
         id: 'user_details',
-        title: 'Tell me about yourself',
-        description: 'This helps me understand your context better.',
+        title: "Let's start with your story",
+        description: "I'm so glad you're here. Tell me a bit about yourself so I can support you better.",
         fields: [
             { id: 'userName', label: 'What should I call you?', placeholder: 'Your name', type: 'text' },
             {
                 id: 'userAge',
-                label: 'How old are you?',
+                label: 'How many summers have you seen?',
                 type: 'dropdown',
                 choices: ['Under 18', '18-24', '25-34', '35-44', '45+']
             },
             {
                 id: 'userStatus',
-                label: 'What do you do?',
+                label: 'What keeps you busy these days?',
                 type: 'dropdown',
                 choices: ['Student', 'Professional', 'Entrepreneur', 'Self-employed', 'Other']
             },
-            { id: 'userHighMoment', label: 'A recent high moment?', placeholder: 'Something good...', type: 'text' }
+            { id: 'userHighMoment', label: 'A recent moment that made you smile?', placeholder: 'Something good...', type: 'text' }
         ],
         icon: <Smile className="w-5 h-5" strokeWidth={1.5} />
     },
     {
         id: 'buddy_profile',
-        title: 'Personalize your AI Buddy',
-        description: 'Choose how your companion should interact with you.',
+        title: 'Meet your new companion',
+        description: 'Every journey is better with a friend. Who will be walking beside you?',
         fields: [
-            { id: 'buddyName', label: "What is your buddy's name?", placeholder: 'Buddy name', type: 'text' },
+            { id: 'buddyName', label: "What should I name your buddy?", placeholder: 'e.g., Aura', type: 'text' },
             {
                 id: 'buddyAge',
-                label: "What is your buddy's age?",
+                label: "How wise should your buddy be?",
                 type: 'dropdown',
                 choices: ['Young adult (20s)', 'Mature (30s)', 'Wise (40s+)', 'Ageless']
             }
         ],
         options: {
             id: 'buddyStyle',
-            title: 'Communication',
-            choices: ['Friendly', 'Formal', 'Caring']
+            title: 'How should we talk?',
+            choices: ['Friendly', 'Gentle', 'Direct']
         },
         icon: <Sparkles className="w-5 h-5" strokeWidth={1.5} />
     },
     {
         id: 'goal_categories',
-        title: 'What are your primary goals?',
-        description: 'Select as many as apply to you.',
+        title: "What's weighing on your mind?",
+        description: "Be honest with yourself. What do you want to nurture?",
         multiSelect: true,
         options: {
             id: 'goalCategories',
-            choices: ['Stress', 'Sleep', 'Stability', 'Growth', 'Focus', 'Fitness']
+            choices: ['Less Stress', 'Better Sleep', 'Emotional Balance', 'Personal Growth', 'Deep Focus', 'Movement']
         },
         icon: <Target className="w-5 h-5" strokeWidth={1.5} />
     },
     {
         id: 'goal_details',
-        title: 'Refine your mission',
-        description: 'Tell me a bit more about what you want to achieve.',
+        title: 'Your promise to yourself',
+        description: "Let's put words to your intention. This is your sanctuary.",
         fields: [
-            { id: 'goalTitle', label: 'Main Goal', placeholder: 'e.g., Daily Calm', type: 'text' },
-            { id: 'goalDescription', label: 'Description', placeholder: 'Why is this important?', type: 'textarea' }
+            { id: 'goalTitle', label: 'Your North Star', placeholder: 'e.g., Finding my inner peace', type: 'text' },
+            { id: 'goalDescription', label: 'Why does this matter to you?', placeholder: 'Share your why...', type: 'textarea' }
         ],
         icon: <BookOpen className="w-5 h-5" strokeWidth={1.5} />
     },

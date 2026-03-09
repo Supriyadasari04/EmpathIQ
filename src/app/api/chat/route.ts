@@ -31,13 +31,27 @@ export async function POST(req: Request) {
     const hf = new HfInference(hfToken);
 
     try {
-        const { messages } = (await req.json()) as { messages: any[] };
+        const { messages, detectedMood } = (await req.json()) as { messages: any[], detectedMood?: string };
+
+        // --- Innovation 4: Soul-First Context Injection ---
+        let resonancePrefix = "You are a warm, empathic wellness companion. Your primary goal is to validate the user's feelings.";
+
+        if (detectedMood === 'Sad') {
+            resonancePrefix = "The user is currently feeling Sad or vulnerable. Be hyper-empathic, use soft language, and prioritize emotional safety. Do not rush into solutions; just hold space for them.";
+        } else if (detectedMood === 'Happy') {
+            resonancePrefix = "The user is feeling Happy. Mirror their energy with warmth and celebration, but remain grounded and supportive.";
+        }
 
         // Ensure the messages format is correct for the API
-        const formattedMessages = messages.map((m: any) => ({
-            role: m.role || 'user',
-            content: m.content || m.text || ''
-        }));
+        const formattedMessages = messages.map((m: any) => {
+            if (m.role === 'system') {
+                return { role: 'system', content: `${resonancePrefix}\n\n${m.content}` };
+            }
+            return {
+                role: m.role || 'user',
+                content: m.content || m.text || ''
+            };
+        });
 
         let response = null;
         let lastError: any = null;
@@ -55,7 +69,7 @@ export async function POST(req: Request) {
                 console.error(`Model ${model} failed:`, err.message);
                 lastError = err;
                 if (err.status === 401) break; // Token is invalid
-                continue; 
+                continue;
             }
         }
 
@@ -63,7 +77,7 @@ export async function POST(req: Request) {
             throw new Error(lastError?.message || 'All AI models failed to respond');
         }
 
-        const content = response.choices[0].message.content;
+        const content = response.choices?.[0]?.message?.content || "I am here, and I am listening. Tell me more.";
 
         return NextResponse.json({
             content: content.trim()

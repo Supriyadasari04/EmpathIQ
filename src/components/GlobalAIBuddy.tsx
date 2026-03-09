@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Smile, Send, X, MessageCircle, Sparkles, Zap, Brain, ShieldAlert, Heart, Activity, Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/lib/store';
+import AuraFace, { AuraMood } from './AuraFace';
 
 export default function GlobalAIBuddy() {
     const { user, buddy, detectedEmotion, reportEmotion, notifications, addNotification } = useApp();
@@ -13,7 +14,7 @@ export default function GlobalAIBuddy() {
     const [popupText, setPopupText] = useState('');
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant', text: string; isCrisis?: boolean }[]>([]);
     const [input, setInput] = useState('');
-    const [buddyEmotion, setBuddyEmotion] = useState<'calm' | 'alert' | 'happy'>('calm');
+    const [buddyEmotion, setBuddyEmotion] = useState<AuraMood>('calm');
     const [isRecording, setIsRecording] = useState(false);
     const recognitionRef = useRef<any>(null);
 
@@ -104,16 +105,16 @@ export default function GlobalAIBuddy() {
 
             if (source === 'Reflection') {
                 if (emotion === 'Sad' || emotion === 'Anxious') {
-                    message = `Hey ${user.name}, I just read your reflection. I'm sorry things feel heavy. Maybe a "Breathing Sanctuary" session could help? I'm right here. 💙 - ${buddyName}`;
+                    message = `Hey ${user.name}, I just finished reading your latest heart log. 💙 I'm holding space for you. How about we try a quick grounding moment in the Sanctuary together?`;
                 } else if (emotion === 'Happy') {
-                    message = `I love that reflection, ${user.name}! Your high moment sounds amazing. Keep that energy up! - ${buddyName}`;
+                    message = `I just saw your beautiful reflection, ${user.name}! Your joy is absolutely radiant. Watching you grow makes me so proud! ✨`;
                 } else {
-                    message = `Thanks for sharing your thoughts, ${user.name}. I've noted how you're feeling. - ${buddyName}`;
+                    message = `Thanks for sharing your heart with me, ${user.name}. It helps us stay in sync. 🌿`;
                 }
             } else {
-                if (emotion === 'Sad' || emotion === 'Stressed') message = `I noticed a bit of ${emotion.toLowerCase()} in your ${source}. Want to visit the Sanctuary for a quick grounding exercise?`;
-                else if (emotion === 'Neutral') message = `You seem steady today. How can I support your flow?`;
-                else if (emotion === 'Happy') message = `That's great energy from your ${source}! What's making you smile?`;
+                if (emotion === 'Sad' || emotion === 'Stressed') message = `I'm picking up a bit of a heavy frequency from your ${source}. Take a deep breath with me? I'm right here. 🕊️`;
+                else if (emotion === 'Neutral') message = `You're feeling steady today, and that's a beautiful place to be. How's your flow?`;
+                else if (emotion === 'Happy') message = `Your ${source} is glowing! I love seeing you this way. What's the best part of your hour? ☀️`;
             }
 
             handleProactiveChat(message, emotion === 'Sad' || emotion === 'Stressed');
@@ -126,20 +127,20 @@ export default function GlobalAIBuddy() {
             let message = "";
 
             if (type === 'achievement') {
-                message = `WHOA! ${user.name}, you just unlocked "${data.title}"! I'm so proud of you! 🎉 - ${buddyName}`;
+                message = `WHOA! ${user.name}, you just reached a new milestone: "${data.title}"! You're honestly unstoppable. 🎉`;
             } else if (type === 'mission') {
-                message = `Nailed it! Mission "${data.label}" complete. You're on fire today, ${user.name}! - ${buddyName}`;
+                message = `Nailed it! Another mission complete. You're showing up for yourself so beautifully today, ${user.name}.`;
             } else if (type === 'habit') {
                 if (data.status === 'completed') {
-                    message = `7 days of ${data.name}! That consistency is legendary. How does it feel to be this focused? - ${buddyName}`;
+                    message = `7 days of ${data.name}! Your consistency is so inspiring. How does it feel to be building this rhythm?`;
                 }
             } else if (type === 'activity') {
-                message = `I watched you complete the ${data.title}! Your commitment to your mental peace is so inspiring, ${user.name}. ✨`;
+                message = `I just watched you finish that ${data.title}. Your commitment to your inner peace is truly something special. ✨`;
             } else if (type === 'check_in') {
                 const score = data.val;
-                if (score <= 2) message = `I noticed things feel a bit cloudy today (${score}/5). I'm right here with you, ${user.name}. You don't have to carry this alone. 🤍`;
-                else if (score >= 4) message = `A ${score}/5 day! I can feel the radiance from here! Keep shining, ${user.name}. ☀️`;
-                else message = `A steady ${score}/5. Balance is a beautiful thing. - ${buddyName}`;
+                if (score <= 2) message = `I noticed things feel a bit heavy today... (${score}/5). Just a reminder that you don't have to carry it all alone. I'm right here. 🤍`;
+                else if (score >= 4) message = `A ${score}/5 day! I can feel your radiance from way over here! Keep shining, ${user.name}. ☀️`;
+                else message = `A steady ${score}/5. Balance is where the magic happens. We're doing great.`;
             }
 
             handleProactiveChat(message, false);
@@ -153,12 +154,33 @@ export default function GlobalAIBuddy() {
 
         resetInactivity();
 
+        // Aura's "Fleeting Thoughts" - Periodically share something human-like
+        const thoughtInterval = setInterval(() => {
+            const thoughts = [
+                "I was just thinking about how much progress you've made. It's really inspiring. 🌿",
+                "Did you know that even small steps count as moving forward? You're doing great.",
+                "I found a beautiful poem about resilience today. Want to hear it later?",
+                "The atmosphere feels really peaceful right now. I'm glad we're sharing this space.",
+                "Just a reminder: you're allowed to take a break whenever you need one. 🤍"
+            ];
+
+            if (!isOpen && !showPopup) {
+                const randomThought = thoughts[Math.floor(Math.random() * thoughts.length)];
+                addNotification({
+                    title: `${buddy.name}'s Thought`,
+                    message: randomThought,
+                    type: 'coach'
+                });
+            }
+        }, 1000 * 60 * 15); // Every 15 minutes
+
         return () => {
             window.removeEventListener('emotion_detected', handleEmotionEvent);
             window.removeEventListener('buddy_trigger', handleTriggerEvent);
             window.removeEventListener('mousemove', resetInactivity);
             window.removeEventListener('keydown', resetInactivity);
             clearTimeout(inactivityTimer);
+            clearInterval(thoughtInterval);
         };
     }, [user.name, buddy.name]);
 
@@ -256,7 +278,7 @@ export default function GlobalAIBuddy() {
 
             // Auto-detect emotion from AI response to sync buddy behavior
             const lowerContent = data.content.toLowerCase();
-            if (lowerContent.includes('happy') || lowerContent.includes('glad') || lowerContent.includes('yay')) setBuddyEmotion('happy');
+            if (lowerContent.includes('happy') || lowerContent.includes('glad') || lowerContent.includes('yay') || lowerContent.includes('!')) setBuddyEmotion('happy');
             else setBuddyEmotion('calm');
 
         } catch (error: any) {
@@ -303,10 +325,10 @@ export default function GlobalAIBuddy() {
 
                         <div className="flex items-start gap-3">
                             <div className={cn(
-                                "w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center shadow-xs transition-all",
+                                "w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center shadow-xs transition-all p-1.5",
                                 buddyEmotion === 'alert' ? "bg-red-500 text-white" : "bg-[var(--accent)] text-[var(--primary-text)]"
                             )}>
-                                {buddyEmotion === 'alert' ? <ShieldAlert className="w-4 h-4" strokeWidth={1.5} /> : <Sparkles className="w-4 h-4" strokeWidth={1.5} />}
+                                <AuraFace mood={buddyEmotion} />
                             </div>
                             <div>
                                 <p className="text-[12px] font-medium leading-[1.6] mb-2 text-[var(--primary-text)]">{popupText}</p>
@@ -340,10 +362,10 @@ export default function GlobalAIBuddy() {
                         )}>
                             <div className="flex items-center gap-3">
                                 <div className={cn(
-                                    "w-10 h-10 rounded-xl flex items-center justify-center shadow-xs",
+                                    "w-10 h-10 rounded-xl flex items-center justify-center shadow-xs p-1.5",
                                     buddyEmotion === 'alert' ? "bg-white/20" : "bg-white border border-[var(--border)]"
                                 )}>
-                                    {buddyEmotion === 'alert' ? <ShieldAlert className="w-5 h-5 text-white" strokeWidth={1.5} /> : <Sparkles className="w-5 h-5 text-[var(--accent)]" strokeWidth={1.5} />}
+                                    <AuraFace mood={buddyEmotion} />
                                 </div>
                                 <div className="space-y-0.5">
                                     <h3 className="font-semibold text-[15px] tracking-tight">{buddy.name}</h3>
@@ -453,11 +475,11 @@ export default function GlobalAIBuddy() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "w-12 h-12 rounded-xl shadow-lg flex items-center justify-center transition-all duration-300",
+                    "w-12 h-12 rounded-xl shadow-lg flex items-center justify-center transition-all duration-300 p-2",
                     isOpen ? "bg-white text-[var(--primary-text)] border border-[var(--border)]" : "bg-[var(--accent)] text-[var(--primary-text)]"
                 )}
             >
-                {isOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Activity className="w-5 h-5" strokeWidth={1.5} />}
+                {isOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <AuraFace mood={buddyEmotion} />}
                 {!isOpen && (showPopup || notifications.some(n => n.unread)) && (
                     <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
                 )}
